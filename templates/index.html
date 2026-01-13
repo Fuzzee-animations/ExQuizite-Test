@@ -334,7 +334,7 @@
         var optlen = options.length;
         for (var i = 0; i < optlen; i++) {
           var currentOption = Math.floor(Math.random() * options.length);
-          if (options[currentOption] == "") {
+          if (options[currentOption] != "") {
           $("#quiz-question").append("<div class='quiz-option'>" + options[currentOption] + "</div>");
           }
           options.splice(currentOption, 1);
