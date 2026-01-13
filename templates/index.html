@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <title>ExQuizite</title>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        background-color: #e8e9f4;
+        width: 100%;
+        min-height: 100%;
+        font-family: "Roboto", sans-serif;
+      }
+      button, input, select, textarea {
+        font-family: "Roboto", sans-serif;
+      }
+      header {
+        background-color: rgb(18, 17, 27);
+        margin: 0;
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        color: white;
+      }
+      #header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+      }
+      #quiz-div {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: start;
+        align-items: start;
+        gap: 30px;
+        width: 80%;
+        margin: auto;
+        padding-top: 15px;
+      }
+      #app-page, #quiz-page, #flashcards-page {
+        position: relative;
+        margin-top: 110px;
+      }
+      #add-btn, #start-btn, #flashcards-btn {
+        padding: 10px;
+        border: 0;
+        border-radius: 10px;
+        background-color: rgb(18, 17, 27);
+        color: white;
+        transition: 0.2s;
+        cursor: pointer;
+        margin: 10px;
+        margin-right: 0;
+      }
+      .question {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        text-align: center;
+        margin: auto;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 50px;
+      }
+      .question > h4 {
+        margin: 5px;
+      }
+      .option {
+        width: 400px;
+        height: 30px;
+        padding: 10px;
+        background-color: white;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 18px;
+        color: black;
+        transition: 0.2s;
+        overflow: hidden;
+        border: 0;
+      }
+      .question-text {
+        font-weight: 700;
+        font-size: 16px;
+        background-color: transparent;
+        border: 0;
+        width: 100%;
+        text-align: center;
+        border-radius: 10px;
+      }
+      .question-text:focus {
+        outline: 1px solid rgb(122, 122, 144) !important;
+      }
+      .top-question {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        width: 100%;
+        gap: 30px;
+        box-sizing: border-box;
+        position: relative;
+      }
+      .id {
+        margin: 0;
+      }
+      .delete {
+        width: 20px;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        cursor: pointer;
+      }
+      #quiz-question {
+        display: flex;
+        flex-direction: column;
+        width: 60%;
+        text-align: center;
+        gap: 7px;
+        margin: auto;
+      }
+      .quiz-option {
+        width: 100%;
+        padding: 10px;
+        background-color: white;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        font-size: 23px;
+      }
+      .quiz-option:hover {
+        background-color: rgb(197, 192, 212);
+        transition: 0.2s;
+      }
+      #quiz-question > h2 {
+        margin: 10px;
+        font-size: 30px;
+        font-weight: 800;
+      }
+      #next-btn {
+        width: 100%;
+        padding: 10px;
+        background-color: rgb(18, 17, 27);
+        color: white;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        margin-top: 30px;
+        border: 0;
+      }
+       #add-btn:hover, #start-btn:hover, #flashcards-btn:hover, #next-btn:hover {
+        background-color: rgb(72, 48, 226);
+        transition: 0.2s; 
+      }
+      #flashcard {
+        background-color: white;
+        border-radius: 10px;
+        width: 500px;
+        height: 500px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin: auto;
+        margin-top: 20px;
+        cursor: pointer;
+      }
+      .flipped {
+        transform: scaleX(-1);
+        transition: 0.2s;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header">
+    <header>
+      <h1>ExQuizite</h1>
+    </header>
+    <div id="top-btn">
+     <button id="add-btn">Add Question</button>
+     <button id="start-btn">Start Quiz</button>
+     <button id="flashcards-btn">Show Flashcards</button>
+     </div>
+    </div>
+    <div id="app-page">
+      <div id="quiz-div"></div>
+    </div>
+    <div id="quiz-page">
+      <div id="quiz-question"></div>
+    </div>
+    <div id="flashcards-page">
+      <div id="flashcard"></div>
+    </div>
+    <script>
+      $("#quiz-page").hide();
+      $("#flashcards-page").hide();
+      var questions = [];
+      var currentQuiz = [];
+      var currentQuestion = 0;
+      var total = 0;
+      var score = 0;
+      var flashcardState = "question";
+      var updateTimeout;
+      var a = 0;
+      var control = 0;
+      function getQuestions() {
+        $.ajax({
+        url: "get_questions"
+      }).then(loadQuestions);
+      }
+      
+      getQuestions()
+
+      function loadQuestions(response) {
+        $("#quiz-div").html('');
+        questions = [];
+        buttonClick()
+        for (var i of response) {
+          var options = i[2].split(",|,")
+          questions.push(i)
+          $("#quiz-div").append("<div class='question'><div class='top-question'><p class='id'>" + i[0] + "</p><img class='delete' src='{{url_for('static', filename='delete.png')}}'></div><input class='question-text' value='" + i[1] + "'><input class='option' value='" + options[0] + "' style='background-color: lime;'><input class='option' value='" + options[1] + "'><input class='option' value='" + options[2] + "'><input class='option' value='" + options[3] + "'></div>")
+        }
+        $(".option, .question-text").off().on("focus", function(event) {
+        $(this).select();
+      });
+      $(".option, .question-text").on("change paste keyup", function() {
+        var element = $(this);
+        clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(function() {
+        var questionText = element.parent().find(".question-text").val();
+        var options = "";
+        var correct = element.parent().find(".option").first().val();
+        var thisId = element.parent().find(".id").text();
+        element.parent().find(".option").each(function() {
+          options += $(this).val();
+          if (!$(this).is(":last-child")) {
+            options += ",|,"
+          }
+        });
+          $.ajax({
+            url: "/update",
+            data: {"question_text": questionText, "options": options, "correct": correct, "quiz": 1, "id": thisId}
+         })
+        }, 300);
+      });
+      $(".delete").off().on("click", function() {
+        var id = $(this).parent().find(".id").text();
+        $.ajax({
+          url: "/delete_question",
+          data: {"id": id}
+        }).then(getQuestions);
+      })
+      }
+
+      function buttonClick() {
+        $("#add-btn").off().on("click", function() {
+        $.ajax({
+          url: "/add_question",
+          data: {"question_text": "What is the capital of France?", "options": "Paris,London,Cairo,Madrid", "correct": "Paris", "quiz": 1}
+        });
+        setTimeout(getQuestions, 100)
+      });
+      }
+
+      $(document).on("keydown", function(e) {
+          if (e.key == "Enter" || e.key == "ArrowDown" || e.key == "Tab") {
+            e.preventDefault();
+            var focused = $(":focus");
+            var nextFocus = focused.next();
+            nextFocus.focus();
+            nextFocus.select();
+          }else if (e.key == "ArrowUp") {
+            e.preventDefault();
+            var focused = $(":focus");
+            var prevFocus = focused.prev();
+            prevFocus.focus();
+            prevFocus.select();
+          }else if (e.key == "a") {
+            a = 1;
+          }else if (e.key == "ArrowRight") {
+            if ($("#flashcards-page").is(":visible")) {
+              getCard(1);
+            }
+          }else if (e.key == "ArrowLeft") {
+            if ($("#flashcards-page").is(":visible")) {
+              getCard(-1);
+            }
+          }else if (e.key == "Control") {
+            control = 1;
+          }
+          if (control == 1 && a == 1) {
+            $("#add-btn").click();
+          }
+      });
+
+      $(document).on("keyup", function(e) {
+        if (e.key == "a") {
+          a = 0;
+        }else if (e.key == "Control") {
+          control = 0;
+        }
+      })
+
+
+
+
+
+
+
+
+
+      $("#start-btn").click(function() {
+        currentQuiz = questions;
+        total = 0;
+        $("#app-page").hide();
+        $("#top-btn").hide();
+        $("#quiz-page").show();
+        nextQuestion();
+      });
+
+      function nextQuestion() {
+        total +=1;
+        currentQuestion = Math.floor(Math.random() * currentQuiz.length);
+        var options = currentQuiz[currentQuestion][2].split(",|,");
+        $("#quiz-question").html("<h2>" + currentQuiz[currentQuestion][1] + "</h2></div>");
+        var optlen = options.length;
+        for (var i = 0; i < optlen; i++) {
+          var currentOption = Math.floor(Math.random() * options.length);
+          if (options[currentOption] == "") {
+          $("#quiz-question").append("<div class='quiz-option'>" + options[currentOption] + "</div>");
+          }
+          options.splice(currentOption, 1);
+        }
+
+        $(".quiz-option").click(function() {
+          var clicked = $(this).text();
+          $(this).css({"padding-right": "50px"});
+          $(this).parent().find(".quiz-option").each(function(){
+            if ($(this).text() == currentQuiz[currentQuestion][3]) {
+              $(this).css({"background-color": "#3e22f2", "color": "white"});
+              if (clicked == $(this).text()) {
+                score +=1;
+              }
+            }else {
+              if (clicked == $(this).text()) {
+                $(this).css({"background-color": "#cc2146", "color": "white"});
+              }
+            }
+          });
+          if (currentQuiz.length == 1) {
+            $("#quiz-question").append("<button id='next-btn'>Finish</button>");
+            $("#next-btn").click(alertScore);
+          }else {
+            $("#quiz-question").append("<button id='next-btn'>Next</button>");
+            $("#next-btn").click(nextQuestion);
+          }
+          currentQuiz.splice(currentQuestion, 1);
+        });
+      }
+
+      function alertScore() {
+          alert("SCORE: " + score + "/" + total + "\nPERCENT: " + score/total*100 + "%");
+          window.location.reload();
+      }
+
+
+
+
+      $("#flashcards-btn").click(function() {
+        $("#app-page").hide();
+        $("#flashcards-page").show();
+        currentQuestion = 0;
+        getCard(0);
+      });
+
+      function getCard(change) {
+        $("#flashcard").hide();
+        $("#flashcard").fadeIn(200);
+        currentQuestion = currentQuestion + change;
+        flashcardState = "question";
+        $("#flashcard").html("<h2 class='shown-h2'>" + questions[currentQuestion][1] + "</h2><h2 class='hidden-h2'>" + questions[currentQuestion][3] + "</h2>");
+        $(".hidden-h2").hide();
+      }
+
+      $("#flashcard").click(function() {
+        $("#flashcard").toggleClass("flipped");
+        $(".shown-h2").hide();
+        $(".hidden-h2").hide();
+          setTimeout(function() {
+            $("#flashcard").toggleClass("flipped");
+            if (flashcardState == "question") {
+          flashcardState = "answer";
+          $(".hidden-h2").show();
+        }else {
+          flashcardState = "question";
+          $(".shown-h2").show();
+        }
+          }, 200);
+      });
+    </script>
+  </body>
+</html>
